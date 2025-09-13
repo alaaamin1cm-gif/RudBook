@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}إعدادات الإشعارات - الكتاب الأحمر{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bell"></i>
+                        إعدادات الإشعارات
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-4">
+                            <h6 class="fw-bold">الإشعارات الفورية</h6>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="push_notifications" checked>
+                                <label class="form-check-label" for="push_notifications">
+                                    تفعيل الإشعارات الفورية
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <h6 class="fw-bold">التفاعل مع المنشورات</h6>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="likes_notifications" checked>
+                                <label class="form-check-label" for="likes_notifications">
+                                    الإعجابات على منشوراتي
+                                </label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="comments_notifications" checked>
+                                <label class="form-check-label" for="comments_notifications">
+                                    التعليقات على منشوراتي
+                                </label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="shares_notifications" checked>
+                                <label class="form-check-label" for="shares_notifications">
+                                    مشاركة منشوراتي
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <h6 class="fw-bold">المتابعة والأصدقاء</h6>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="follow_notifications" checked>
+                                <label class="form-check-label" for="follow_notifications">
+                                    المتابعون الجدد
+                                </label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="friend_suggestions" checked>
+                                <label class="form-check-label" for="friend_suggestions">
+                                    اقتراحات الأصدقاء
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <h6 class="fw-bold">الرسائل</h6>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="message_notifications" checked>
+                                <label class="form-check-label" for="message_notifications">
+                                    الرسائل الجديدة
+                                </label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="message_sound" checked>
+                                <label class="form-check-label" for="message_sound">
+                                    صوت تنبيه الرسائل
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <h6 class="fw-bold">البريد الإلكتروني</h6>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="email_notifications">
+                                <label class="form-check-label" for="email_notifications">
+                                    إشعارات البريد الإلكتروني
+                                </label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="email_summary">
+                                <label class="form-check-label" for="email_summary">
+                                    ملخص أسبوعي بالبريد الإلكتروني
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <h6 class="fw-bold">أوقات الصمت</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="quiet_start" class="form-label">بداية وقت الصمت</label>
+                                    <input type="time" class="form-control" id="quiet_start" value="22:00">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="quiet_end" class="form-label">نهاية وقت الصمت</label>
+                                    <input type="time" class="form-control" id="quiet_end" value="08:00">
+                                </div>
+                            </div>
+                            <small class="text-muted">لن تصلك إشعارات خلال هذه الأوقات</small>
+                        </div>
+
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> حفظ الإعدادات
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

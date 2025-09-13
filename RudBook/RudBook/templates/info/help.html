@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+
+{% block title %}المساعدة - الكتاب الأحمر{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-question-circle"></i>
+                        مركز المساعدة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- FAQ Categories -->
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                                <button class="nav-link active" id="getting-started-tab" data-bs-toggle="pill" 
+                                        data-bs-target="#getting-started" type="button" role="tab">
+                                    <i class="fas fa-play-circle"></i> البدء
+                                </button>
+                                <button class="nav-link" id="profile-help-tab" data-bs-toggle="pill" 
+                                        data-bs-target="#profile-help" type="button" role="tab">
+                                    <i class="fas fa-user"></i> الملف الشخصي
+                                </button>
+                                <button class="nav-link" id="posts-help-tab" data-bs-toggle="pill" 
+                                        data-bs-target="#posts-help" type="button" role="tab">
+                                    <i class="fas fa-edit"></i> المنشورات
+                                </button>
+                                <button class="nav-link" id="stories-help-tab" data-bs-toggle="pill" 
+                                        data-bs-target="#stories-help" type="button" role="tab">
+                                    <i class="fas fa-camera"></i> القصص
+                                </button>
+                                <button class="nav-link" id="messages-help-tab" data-bs-toggle="pill" 
+                                        data-bs-target="#messages-help" type="button" role="tab">
+                                    <i class="fas fa-envelope"></i> الرسائل
+                                </button>
+                                <button class="nav-link" id="privacy-help-tab" data-bs-toggle="pill" 
+                                        data-bs-target="#privacy-help" type="button" role="tab">
+                                    <i class="fas fa-shield-alt"></i> الخصوصية
+                                </button>
+                                <button class="nav-link" id="troubleshooting-tab" data-bs-toggle="pill" 
+                                        data-bs-target="#troubleshooting" type="button" role="tab">
+                                    <i class="fas fa-tools"></i> استكشاف الأخطاء
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-9">
+                            <div class="tab-content" id="v-pills-tabContent">
+                                <!-- Getting Started -->
+                                <div class="tab-pane fade show active" id="getting-started" role="tabpanel">
+                                    <h6>البدء مع الكتاب الأحمر</h6>
+                                    <div class="accordion" id="gettingStartedAccordion">
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header">
+                                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                                                    كيف أقوم بإنشاء حساب جديد؟
+                                                </button>
+                                            </h2>
+                                            <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#gettingStartedAccordion">
+                                                <div class="accordion-body">
+                                                    <ol>
+                                                        <li>انقر على زر "إنشاء حساب" في الصفحة الرئيسية</li>
+                                                        <li>أدخل اسمك الكامل واسم المستخدم والبريد الإلكتروني</li>
+                                                        <li>اختر كلمة مرور قوية</li>
+                                                        <li>انقر على "إنشاء الحساب"</li>
+                                                        <li>تحقق من بريدك الإلكتروني لتفعيل الحساب</li>
+                                                    </ol>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header">
+                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+                                                    كيف أقوم بتخصيص ملفي الشخصي؟
+                                                </button>
+                                            </h2>
+                                            <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#gettingStartedAccordion">
+                                                <div class="accordion-body">
+                                                    <ul>
+                                                        <li>اذهب إلى ملفك الشخصي</li>
+                                                        <li>انقر على "تعديل الملف الشخصي"</li>
+                                                        <li>أضف صورة شخصية ونبذة عنك</li>
+                                                        <li>احفظ التغييرات</li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Profile Help -->
+                                <div class="tab-pane fade" id="profile-help" role="tabpanel">
+                                    <h6>إدارة الملف الشخصي</h6>
+                                    <div class="help-content">
+                                        <h6>تعديل المعلومات الشخصية</h6>
+                                        <p>يمكنك تعديل معلوماتك الشخصية من خلال صفحة "تعديل الملف الشخصي" في الإعدادات.</p>
+                                        
+                                        <h6>تغيير الصورة الشخصية</h6>
+                                        <p>انقر على أيقونة الكاميرا في صورتك الشخصية لتحديث الصورة.</p>
+                                        
+                                        <h6>خصوصية الملف الشخصي</h6>
+                                        <p>يمكنك التحكم في من يمكنه رؤية ملفك الشخصي من خلال إعدادات الخصوصية.</p>
+                                    </div>
+                                </div>
+                                
+                                <!-- Posts Help -->
+                                <div class="tab-pane fade" id="posts-help" role="tabpanel">
+                                    <h6>إنشاء ومشاركة المنشورات</h6>
+                                    <div class="help-content">
+                                        <h6>أنواع المنشورات</h6>
+                                        <ul>
+                                            <li><strong>نص:</strong> منشور نصي بسيط</li>
+                                            <li><strong>صورة:</strong> منشور مع صورة</li>
+                                            <li><strong>فيديو:</strong> منشور مع مقطع فيديو</li>
+                                            <li><strong>استطلاع:</strong> منشور استطلاع رأي</li>
+                                            <li><strong>موقع:</strong> منشور مع تحديد الموقع</li>
+                                        </ul>
+                                        
+                                        <h6>تحرير المنشورات</h6>
+                                        <p>يمكنك تحرير أو حذف منشوراتك من خلال القائمة الثلاثية النقاط.</p>
+                                    </div>
+                                </div>
+                                
+                                <!-- Stories Help -->
+                                <div class="tab-pane fade" id="stories-help" role="tabpanel">
+                                    <h6>القصص والكاميرا</h6>
+                                    <div class="help-content">
+                                        <h6>إنشاء قصة</h6>
+                                        <p>انقر على "إضافة قصة" لفتح الكاميرا وإنشاء قصة جديدة.</p>
+                                        
+                                        <h6>فلاتر الوجه</h6>
+                                        <p>اختر من بين مجموعة متنوعة من فلاتر الوجه والتأثيرات الممتعة.</p>
+                                        
+                                        <h6>مدة القصص</h6>
+                                        <p>القصص تختفي تلقائياً بعد 24 ساعة من النشر.</p>
+                                    </div>
+                                </div>
+                                
+                                <!-- Messages Help -->
+                                <div class="tab-pane fade" id="messages-help" role="tabpanel">
+                                    <h6>الرسائل والمحادثات</h6>
+                                    <div class="help-content">
+                                        <h6>بدء محادثة</h6>
+                                        <p>انقر على أيقونة الرسائل أو اذهب إلى ملف شخص ما وانقر على "رسالة".</p>
+                                        
+                                        <h6>الرسائل الصوتية</h6>
+                                        <p>اضغط مطولاً على أيقونة الميكروفون لتسجيل رسالة صوتية.</p>
+                                        
+                                        <h6>إعدادات الرسائل</h6>
+                                        <p>يمكنك التحكم في من يمكنه إرسال رسائل لك من خلال إعدادات الخصوصية.</p>
+                                    </div>
+                                </div>
+                                
+                                <!-- Privacy Help -->
+                                <div class="tab-pane fade" id="privacy-help" role="tabpanel">
+                                    <h6>إعدادات الخصوصية والأمان</h6>
+                                    <div class="help-content">
+                                        <h6>خصوصية الملف الشخصي</h6>
+                                        <p>اختر من يمكنه رؤية ملفك الشخصي ومنشوراتك.</p>
+                                        
+                                        <h6>حظر المستخدمين</h6>
+                                        <p>يمكنك حظر أي مستخدم من خلال ملفه الشخصي.</p>
+                                        
+                                        <h6>الإبلاغ عن المحتوى</h6>
+                                        <p>أبلغ عن أي محتوى مخالف للقوانين أو يسبب إزعاجاً.</p>
+                                    </div>
+                                </div>
+                                
+                                <!-- Troubleshooting -->
+                                <div class="tab-pane fade" id="troubleshooting" role="tabpanel">
+                                    <h6>استكشاف الأخطاء وحلها</h6>
+                                    <div class="help-content">
+                                        <h6>مشاكل تحميل الصور</h6>
+                                        <p>تأكد من أن حجم الصورة أقل من 50 ميجابايت وبصيغة JPG أو PNG.</p>
+                                        
+                                        <h6>مشاكل الكاميرا</h6>
+                                        <p>اسمح للمتصفح بالوصول إلى الكاميرا والميكروفون.</p>
+                                        
+                                        <h6>بطء التطبيق</h6>
+                                        <p>تأكد من اتصالك بالإنترنت وحدث متصفحك إلى أحدث إصدار.</p>
+                                        
+                                        <h6>نسيان كلمة المرور</h6>
+                                        <p>استخدم خيار "نسيت كلمة المرور" في صفحة تسجيل الدخول.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Contact Support -->
+                    <div class="mt-5 p-4 bg-light rounded">
+                        <h6>تحتاج مساعدة إضافية؟</h6>
+                        <p>إذا لم تجد الإجابة على سؤالك، لا تتردد في التواصل معنا.</p>
+                        <div class="d-flex gap-2">
+                            <a href="mailto:support@redbook.com" class="btn btn-primary">
+                                <i class="fas fa-envelope"></i> البريد الإلكتروني
+                            </a>
+                            <a href="#" class="btn btn-outline-primary">
+                                <i class="fab fa-whatsapp"></i> واتساب
+                            </a>
+                            <a href="#" class="btn btn-outline-primary">
+                                <i class="fas fa-phone"></i> الهاتف
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.help-content h6 {
+    color: #dc143c;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.help-content p, .help-content ul {
+    margin-bottom: 1rem;
+}
+
+.nav-pills .nav-link {
+    text-align: right;
+    border-radius: 0.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.nav-pills .nav-link.active {
+    background-color: #dc143c;
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: #f8f9fa;
+    color: #dc143c;
+}
+</style>
+{% endblock %}

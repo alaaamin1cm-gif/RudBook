@@ -1,0 +1,783 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.full_name }} - الكتاب الأحمر{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <!-- Profile Header -->
+    <div class="profile-header">
+        <div class="profile-cover" style="background-image: url('{{ url_for('main.uploaded_file', filename='covers/' + (user.cover_image or 'default-cover.jpg')) }}');">
+            {% if is_own_profile %}
+                <button class="change-cover-btn" onclick="document.getElementById('coverInput').click()">
+                    <i class="fas fa-camera"></i>
+                    تغيير صورة الغلاف
+                </button>
+                <input type="file" id="coverInput" style="display: none;" accept="image/*" onchange="updateCover(this)">
+            {% endif %}
+            <div class="profile-info">
+                <div class="profile-avatar-large">
+                    {% if user.avatar and user.avatar != 'default-avatar.png' %}
+                        <img src="{{ url_for('main.uploaded_file', filename='avatars/' + user.avatar) }}" alt="الصورة الشخصية">
+                    {% else %}
+                        <div class="default-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    {% endif %}
+                    
+                    {% if is_own_profile %}
+                        <button class="change-avatar-btn" onclick="document.getElementById('avatarInput').click()">
+                            <i class="fas fa-camera"></i>
+                        </button>
+                        <input type="file" id="avatarInput" style="display: none;" accept="image/*" onchange="updateAvatar(this)">
+                    {% endif %}
+                </div>
+                
+                <div class="profile-details">
+                    <h1>{{ user.full_name }}</h1>
+                    <p class="username">@{{ user.username }}</p>
+                    
+                    {% if user.bio %}
+                        <p class="bio">{{ user.bio }}</p>
+                    {% endif %}
+                    
+                    <div class="profile-stats">
+                        <div class="stat">
+                            <strong>{{ user.posts.count() }}</strong>
+                            <span>منشور</span>
+                        </div>
+                        <div class="stat">
+                            <a href="{{ url_for('main.user_followers', username=user.username) }}" class="text-decoration-none text-dark">
+                                <strong>{{ user.followers.count() }}</strong>
+                                <span>متابع</span>
+                            </a>
+                        </div>
+                        <div class="stat">
+                            <a href="{{ url_for('main.user_following', username=user.username) }}" class="text-decoration-none text-dark">
+                                <strong>{{ user.following.count() }}</strong>
+                                <span>يتابع</span>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="profile-actions">
+                        {% if is_own_profile %}
+                            <button class="btn btn-primary" onclick="showEditProfile()">
+                                <i class="fas fa-edit"></i>
+                                تعديل الملف الشخصي
+                            </button>
+                            <a href="{{ url_for('auth.profile') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-cog"></i>
+                                الإعدادات
+                            </a>
+                        {% else %}
+                            <button class="btn btn-primary follow-btn" onclick="followUser({{ user.id }}, this)">
+                                {% if is_following %}
+                                    <i class="fas fa-user-minus"></i>
+                                    إلغاء المتابعة
+                                {% else %}
+                                    <i class="fas fa-user-plus"></i>
+                                    متابعة
+                                {% endif %}
+                            </button>
+                            <a href="{{ url_for('main.chat', user_id=user.id) }}" class="btn btn-outline-primary">
+                                <i class="fas fa-envelope"></i>
+                                رسالة
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Profile Content -->
+    <div class="profile-content">
+        <!-- Stories Highlights -->
+        {% if stories %}
+        <div class="profile-stories">
+            <h3>القصص</h3>
+            <div class="stories-grid">
+                {% for story in stories %}
+                <div class="story-highlight" onclick="viewStory({{ story.id }})">
+                    {% if story.image_url %}
+                        <img src="{{ url_for('main.uploaded_file', filename='stories/' + story.image_url) }}" alt="قصة">
+                    {% elif story.video_url %}
+                        <video>
+                            <source src="{{ url_for('main.uploaded_file', filename='stories/' + story.video_url) }}" type="video/mp4">
+                        </video>
+                    {% endif %}
+                    
+                    <div class="story-info">
+                        <span class="story-time">{{ moment(story.created_at).fromNow() }}</span>
+                        <div class="story-views">
+                            <i class="fas fa-eye"></i>
+                            {{ story.view_count() }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Posts Grid -->
+        <div class="profile-posts">
+            <div class="posts-header">
+                <h3>المنشورات</h3>
+                <div class="view-toggle">
+                    <button class="btn btn-sm btn-outline-secondary active" onclick="toggleView('grid')">
+                        <i class="fas fa-th"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="toggleView('list')">
+                        <i class="fas fa-list"></i>
+                    </button>
+                </div>
+            </div>
+            
+            {% if posts %}
+                <div class="posts-grid" id="postsContainer">
+                    {% for post in posts %}
+                    <div class="post-item" onclick="viewPost({{ post.id }})">
+                        {% if post.image_url %}
+                            <img src="{{ url_for('main.uploaded_file', filename='posts/' + post.image_url) }}" alt="منشور">
+                        {% elif post.video_url %}
+                            <video>
+                                <source src="{{ url_for('main.uploaded_file', filename='posts/' + post.video_url) }}" type="video/mp4">
+                            </video>
+                            <div class="video-overlay">
+                                <i class="fas fa-play"></i>
+                            </div>
+                        {% elif post.post_type == 'poll' %}
+                            <div class="poll-preview">
+                                <i class="fas fa-poll"></i>
+                                <span>استطلاع رأي</span>
+                            </div>
+                        {% else %}
+                            <div class="text-preview">
+                                <p>{{ post.content[:100] }}{% if post.content|length > 100 %}...{% endif %}</p>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="post-overlay">
+                            <div class="post-stats">
+                                <span><i class="fas fa-heart"></i> {{ post.like_count() }}</span>
+                                <span><i class="fas fa-comment"></i> {{ post.comment_count() }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-image"></i>
+                    <h4>لا توجد منشورات</h4>
+                    {% if is_own_profile %}
+                        <p>ابدأ بمشاركة أول منشور لك</p>
+                        <button class="btn btn-primary" onclick="showCreatePost()">
+                            <i class="fas fa-plus"></i>
+                            إنشاء منشور
+                        </button>
+                    {% else %}
+                        <p>لم يشارك {{ user.full_name }} أي منشورات بعد</p>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Edit Profile Modal -->
+{% if is_own_profile %}
+<div class="modal fade" id="editProfileModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تعديل الملف الشخصي</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <form action="{{ url_for('auth.profile') }}" method="POST" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="fullName" class="form-label">الاسم الكامل</label>
+                        <input type="text" class="form-control" id="fullName" name="full_name" value="{{ user.full_name }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email" class="form-label">البريد الإلكتروني</label>
+                        <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="bio" class="form-label">النبذة الشخصية</label>
+                        <textarea class="form-control" id="bio" name="bio" rows="3" placeholder="اكتب شيئاً عن نفسك...">{{ user.bio or '' }}</textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="avatar" class="form-label">الصورة الشخصية</label>
+                        <input type="file" class="form-control" id="avatar" name="avatar" accept="image/*">
+                        <small class="form-text text-muted">يمكنك اختيار صورة جديدة أو ترك هذا الحقل فارغاً للاحتفاظ بالصورة الحالية</small>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">حفظ التغييرات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Post View Modal -->
+<div class="modal fade" id="postViewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">عرض المنشور</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="postViewContent">
+                <!-- Post content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.profile-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.profile-header {
+    margin-bottom: 40px;
+}
+
+.profile-cover {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    border-radius: var(--border-radius);
+    padding: 40px 30px 30px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.profile-cover::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" patternUnits="userSpaceOnUse" width="100" height="100"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.1;
+}
+
+.profile-info {
+    position: relative;
+    z-index: 2;
+}
+
+.profile-avatar-large {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 4px solid white;
+    overflow: hidden;
+    margin: 0 auto 20px;
+    position: relative;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
+
+.profile-avatar-large img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-avatar-large .default-avatar {
+    width: 100%;
+    height: 100%;
+    background: var(--primary-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+}
+
+.change-avatar-btn {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    border: 2px solid white;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.change-avatar-btn:hover {
+    background: var(--primary-dark);
+    transform: scale(1.1);
+}
+
+.profile-details {
+    text-align: center;
+}
+
+.profile-details h1 {
+    font-size: 2.2rem;
+    margin-bottom: 5px;
+    font-weight: 700;
+}
+
+.username {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin-bottom: 15px;
+}
+
+.bio {
+    font-size: 1rem;
+    opacity: 0.9;
+    margin-bottom: 20px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.6;
+}
+
+.profile-stats {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-bottom: 25px;
+}
+
+.stat {
+    text-align: center;
+}
+
+.stat strong {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.stat span {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.profile-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.profile-actions .btn {
+    min-width: 120px;
+}
+
+.profile-stories {
+    margin-bottom: 40px;
+}
+
+.profile-stories h3 {
+    margin-bottom: 20px;
+    color: var(--dark-color);
+    font-weight: 600;
+}
+
+.stories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 15px;
+}
+
+.story-highlight {
+    aspect-ratio: 1;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+}
+
+.story-highlight:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-dark);
+}
+
+.story-highlight img,
+.story-highlight video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.story-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+    padding: 20px 10px 10px;
+    color: white;
+    font-size: 0.8rem;
+}
+
+.story-time {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.story-views {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.profile-posts {
+    background: var(--light-color);
+    border-radius: var(--border-radius);
+    padding: 25px;
+    box-shadow: var(--shadow);
+}
+
+.posts-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.posts-header h3 {
+    margin: 0;
+    color: var(--dark-color);
+    font-weight: 600;
+}
+
+.view-toggle {
+    display: flex;
+    gap: 5px;
+}
+
+.view-toggle .btn.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.posts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.posts-grid.list-view {
+    grid-template-columns: 1fr;
+}
+
+.post-item {
+    aspect-ratio: 1;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+}
+
+.posts-grid.list-view .post-item {
+    aspect-ratio: auto;
+    min-height: 200px;
+}
+
+.post-item:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-dark);
+}
+
+.post-item img,
+.post-item video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.video-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60px;
+    height: 60px;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+}
+
+.poll-preview,
+.text-preview {
+    width: 100%;
+    height: 100%;
+    background: var(--secondary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+}
+
+.poll-preview {
+    flex-direction: column;
+    gap: 15px;
+    color: var(--primary-color);
+}
+
+.poll-preview i {
+    font-size: 3rem;
+}
+
+.text-preview p {
+    color: var(--dark-color);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.post-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: var(--transition);
+}
+
+.post-item:hover .post-overlay {
+    opacity: 1;
+}
+
+.post-stats {
+    display: flex;
+    gap: 20px;
+    color: white;
+    font-size: 1.1rem;
+}
+
+.post-stats span {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--gray-color);
+}
+
+.empty-state i {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.empty-state h4 {
+    margin-bottom: 10px;
+    color: var(--dark-color);
+}
+
+.empty-state p {
+    margin-bottom: 25px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .profile-container {
+        padding: 15px;
+    }
+    
+    .profile-cover {
+        padding: 30px 20px 20px;
+    }
+    
+    .profile-avatar-large {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .profile-details h1 {
+        font-size: 1.8rem;
+    }
+    
+    .profile-stats {
+        gap: 25px;
+    }
+    
+    .stat strong {
+        font-size: 1.3rem;
+    }
+    
+    .posts-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 15px;
+    }
+    
+    .stories-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .profile-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .profile-actions .btn {
+        min-width: auto;
+    }
+    
+    .posts-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+    }
+    
+    .view-toggle {
+        justify-content: center;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showEditProfile() {
+    const modal = new bootstrap.Modal(document.getElementById('editProfileModal'));
+    modal.show();
+}
+
+function toggleView(view) {
+    const container = document.getElementById('postsContainer');
+    const buttons = document.querySelectorAll('.view-toggle .btn');
+    
+    buttons.forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    if (view === 'list') {
+        container.classList.add('list-view');
+    } else {
+        container.classList.remove('list-view');
+    }
+}
+
+function viewPost(postId) {
+    // Load post content in modal
+    fetch(`/api/post/${postId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                document.getElementById('postViewContent').innerHTML = data.html;
+                const modal = new bootstrap.Modal(document.getElementById('postViewModal'));
+                modal.show();
+            }
+        })
+        .catch(error => {
+            console.error('Error loading post:', error);
+            showToast('حدث خطأ أثناء تحميل المنشور', 'error');
+        });
+}
+
+function updateAvatar(input) {
+    if (input.files && input.files[0]) {
+        const formData = new FormData();
+        formData.append('avatar', input.files[0]);
+        
+        fetch('{{ url_for("auth.profile") }}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                showToast('حدث خطأ أثناء تحديث الصورة الشخصية', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error updating avatar:', error);
+            showToast('حدث خطأ أثناء تحديث الصورة الشخصية', 'error');
+        });
+    }
+}
+
+function updateCover(input) {
+    if (input.files && input.files[0]) {
+        const formData = new FormData();
+        formData.append('cover', input.files[0]);
+        
+        fetch('/update_cover', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                location.reload();
+            } else {
+                showToast(data.error || 'حدث خطأ في تحديث صورة الغلاف', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error updating cover:', error);
+            showToast('حدث خطأ في رفع صورة الغلاف', 'error');
+        });
+    }
+}
+
+// Add moment.js time formatting
+function moment(date) {
+    return {
+        fromNow: function() {
+            const now = new Date();
+            const postDate = new Date(date);
+            const diffTime = Math.abs(now - postDate);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 1) return 'منذ يوم واحد';
+            if (diffDays < 7) return `منذ ${diffDays} أيام`;
+            if (diffDays < 30) return `منذ ${Math.ceil(diffDays/7)} أسبوع`;
+            return `منذ ${Math.ceil(diffDays/30)} شهر`;
+        }
+    };
+}
+</script>
+{% endblock %}

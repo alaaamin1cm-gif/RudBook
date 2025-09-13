@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+
+{% block title %}البحث المتقدم - الكتاب الأحمر{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-3">
+            <!-- Search Filters -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-filter"></i>
+                        فلاتر البحث
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form id="advancedSearchForm">
+                        <div class="mb-3">
+                            <label for="searchQuery" class="form-label">كلمة البحث</label>
+                            <input type="text" class="form-control" id="searchQuery" placeholder="ابحث هنا...">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">نوع المحتوى</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="searchType" id="searchAll" value="all" checked>
+                                <label class="form-check-label" for="searchAll">الكل</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="searchType" id="searchUsers" value="users">
+                                <label class="form-check-label" for="searchUsers">المستخدمون</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="searchType" id="searchPosts" value="posts">
+                                <label class="form-check-label" for="searchPosts">المنشورات</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="searchType" id="searchHashtags" value="hashtags">
+                                <label class="form-check-label" for="searchHashtags">الهاشتاج</label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="sortBy" class="form-label">ترتيب النتائج</label>
+                            <select class="form-select" id="sortBy">
+                                <option value="relevance">الأكثر صلة</option>
+                                <option value="recent">الأحدث</option>
+                                <option value="popular">الأكثر شعبية</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="dateRange" class="form-label">الفترة الزمنية</label>
+                            <select class="form-select" id="dateRange">
+                                <option value="">جميع الأوقات</option>
+                                <option value="today">اليوم</option>
+                                <option value="week">هذا الأسبوع</option>
+                                <option value="month">هذا الشهر</option>
+                                <option value="year">هذا العام</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="postType" class="form-label">نوع المنشور</label>
+                            <select class="form-select" id="postType">
+                                <option value="">جميع الأنواع</option>
+                                <option value="text">نص</option>
+                                <option value="image">صورة</option>
+                                <option value="video">فيديو</option>
+                                <option value="poll">استطلاع</option>
+                                <option value="location">موقع</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="location" class="form-label">الموقع</label>
+                            <input type="text" class="form-control" id="location" placeholder="المدينة أو المنطقة">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">خيارات متقدمة</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="verifiedOnly">
+                                <label class="form-check-label" for="verifiedOnly">الحسابات الموثقة فقط</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="withMedia">
+                                <label class="form-check-label" for="withMedia">المحتوى المصور فقط</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="followingOnly">
+                                <label class="form-check-label" for="followingOnly">ممن أتابعهم فقط</label>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i> بحث
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="clearFilters()">
+                                <i class="fas fa-times"></i> مسح الفلاتر
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Voice Search -->
+            <div class="card mt-3">
+                <div class="card-body text-center">
+                    <button class="btn btn-outline-primary" id="voiceSearchBtn">
+                        <i class="fas fa-microphone"></i>
+                        البحث الصوتي
+                    </button>
+                    <div id="voiceStatus" class="mt-2 text-muted" style="display: none;">
+                        <small>يرجى التحدث الآن...</small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Trending Hashtags -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-hashtag"></i>
+                        هاشتاج رائج
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="trending-hashtags">
+                        <a href="#" class="hashtag-link" onclick="searchHashtag('الكتاب_الأحمر')">#الكتاب_الأحمر</a>
+                        <a href="#" class="hashtag-link" onclick="searchHashtag('تواصل_اجتماعي')">#تواصل_اجتماعي</a>
+                        <a href="#" class="hashtag-link" onclick="searchHashtag('أصدقاء')">#أصدقاء</a>
+                        <a href="#" class="hashtag-link" onclick="searchHashtag('صور')">#صور</a>
+                        <a href="#" class="hashtag-link" onclick="searchHashtag('فيديو')">#فيديو</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <!-- Search Results -->
+            <div class="search-results">
+                <div id="searchResultsHeader" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 id="resultsTitle">نتائج البحث</h5>
+                        <div class="results-count">
+                            <small class="text-muted" id="resultsCount"></small>
+                        </div>
+                    </div>
+                    
+                    <!-- Results Tabs -->
+                    <ul class="nav nav-tabs" id="resultsTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all-results" type="button" role="tab">
+                                <i class="fas fa-globe"></i> الكل
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="users-tab" data-bs-toggle="tab" data-bs-target="#users-results" type="button" role="tab">
+                                <i class="fas fa-users"></i> المستخدمون
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="posts-tab" data-bs-toggle="tab" data-bs-target="#posts-results" type="button" role="tab">
+                                <i class="fas fa-edit"></i> المنشورات
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="hashtags-tab" data-bs-toggle="tab" data-bs-target="#hashtags-results" type="button" role="tab">
+                                <i class="fas fa-hashtag"></i> الهاشتاج
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Tab Content -->
+                <div class="tab-content mt-3" id="resultsTabContent">
+                    <!-- All Results -->
+                    <div class="tab-pane fade show active" id="all-results" role="tabpanel">
+                        <div id="allResultsContainer"></div>
+                    </div>
+                    
+                    <!-- Users Results -->
+                    <div class="tab-pane fade" id="users-results" role="tabpanel">
+                        <div id="usersResultsContainer"></div>
+                    </div>
+                    
+                    <!-- Posts Results -->
+                    <div class="tab-pane fade" id="posts-results" role="tabpanel">
+                        <div id="postsResultsContainer"></div>
+                    </div>
+                    
+                    <!-- Hashtags Results -->
+                    <div class="tab-pane fade" id="hashtags-results" role="tabpanel">
+                        <div id="hashtagsResultsContainer"></div>
+                    </div>
+                </div>
+                
+                <!-- Empty State -->
+                <div id="emptyState" class="text-center py-5">
+                    <i class="fas fa-search text-muted" style="font-size: 4rem;"></i>
+                    <h4 class="mt-3 text-muted">ابحث في الكتاب الأحمر</h4>
+                    <p class="text-muted">ابحث عن الأصدقاء والمنشورات والهاشتاج والمزيد باستخدام البحث المتقدم.</p>
+                </div>
+                
+                <!-- Loading State -->
+                <div id="loadingState" class="text-center py-5" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">جارٍ البحث...</span>
+                    </div>
+                    <p class="mt-3 text-muted">جارٍ البحث...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.hashtag-link {
+    display: inline-block;
+    background: #f8f9fa;
+    color: #dc143c;
+    padding: 4px 8px;
+    margin: 2px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+}
+
+.hashtag-link:hover {
+    background: #dc143c;
+    color: white;
+    text-decoration: none;
+}
+
+.user-result-card, .post-result-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+}
+
+.user-result-card:hover, .post-result-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.search-result-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #dc143c;
+}
+
+.search-result-content {
+    background: #f8f9fa;
+    padding: 0.75rem;
+    border-radius: 8px;
+    margin-top: 0.5rem;
+}
+
+.verified-badge {
+    color: #1da1f2;
+    margin-left: 4px;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/advanced-search.js') }}"></script>
+{% endblock %}

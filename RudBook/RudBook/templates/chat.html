@@ -1,0 +1,716 @@
+{% extends "base.html" %}
+
+{% block title %}محادثة مع {{ user.full_name }} - الكتاب الأحمر{% endblock %}
+
+{% block content %}
+<div class="chat-container">
+    <div class="chat-header">
+        <div class="chat-back-btn">
+            <a href="{{ url_for('main.messages') }}" class="btn btn-link">
+                <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+        
+        <div class="chat-user-info" onclick="location.href='{{ url_for('main.user_profile', username=user.username) }}'">
+            <div class="chat-avatar">
+                {% if user.avatar and user.avatar != 'default-avatar.png' %}
+                    <img src="{{ url_for('main.uploaded_file', filename='avatars/' + user.avatar) }}" alt="صورة المحادثة">
+                {% else %}
+                    <div class="default-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                {% endif %}
+                <div class="online-indicator"></div>
+            </div>
+            
+            <div class="user-details">
+                <h3>{{ user.full_name }}</h3>
+                <span class="user-status">متصل الآن</span>
+            </div>
+        </div>
+        
+        <div class="chat-actions">
+            <button class="btn btn-link" onclick="startVoiceCall()">
+                <i class="fas fa-phone"></i>
+            </button>
+            <button class="btn btn-link" onclick="startVideoCall()">
+                <i class="fas fa-video"></i>
+            </button>
+            <button class="btn btn-link" onclick="showChatInfo()">
+                <i class="fas fa-info-circle"></i>
+            </button>
+        </div>
+    </div>
+    
+    <div class="chat-messages" id="chatMessages">
+        {% for message in messages %}
+        <div class="message {{ 'sent' if message.sender_id == current_user.id else 'received' }}">
+            {% if message.sender_id != current_user.id %}
+            <div class="message-avatar">
+                {% if message.sender.avatar and message.sender.avatar != 'default-avatar.png' %}
+                    <img src="{{ url_for('main.uploaded_file', filename='avatars/' + message.sender.avatar) }}" alt="صورة المرسل">
+                {% else %}
+                    <div class="default-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            <div class="message-content">
+                {% if message.image_url %}
+                <div class="message-image">
+                    <img src="{{ url_for('main.uploaded_file', filename='messages/' + message.image_url) }}" alt="صورة">
+                </div>
+                {% endif %}
+                
+                {% if message.content %}
+                <div class="message-text">{{ message.content }}</div>
+                {% endif %}
+                
+                <div class="message-time">
+                    {{ message.created_at.strftime('%H:%M') }}
+                    {% if message.sender_id == current_user.id %}
+                        <i class="fas fa-check-double {{ 'read' if message.is_read else 'delivered' }}"></i>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="chat-input-container">
+        <div class="chat-input">
+            <button class="input-btn" onclick="toggleAttachments()">
+                <i class="fas fa-plus"></i>
+            </button>
+            
+            <div class="input-group">
+                <input type="text" id="messageInput" placeholder="اكتب رسالتك..." maxlength="1000">
+                <div class="input-actions">
+                    <button class="input-btn" onclick="openEmojiPicker()">
+                        <i class="fas fa-smile"></i>
+                    </button>
+                    <button class="input-btn" onclick="startVoiceRecording()">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+        
+        <div class="attachments-menu" id="attachmentsMenu" style="display: none;">
+            <button class="attachment-option" onclick="openImagePicker()">
+                <i class="fas fa-image"></i>
+                <span>صورة</span>
+            </button>
+            <button class="attachment-option" onclick="openCameraPicker()">
+                <i class="fas fa-camera"></i>
+                <span>كاميرا</span>
+            </button>
+            <button class="attachment-option" onclick="openLocationPicker()">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>موقع</span>
+            </button>
+        </div>
+        
+        <input type="file" id="imageInput" style="display: none;" accept="image/*" onchange="handleImageUpload(this)">
+        <input type="file" id="cameraInput" style="display: none;" accept="image/*" capture="environment" onchange="handleImageUpload(this)">
+    </div>
+</div>
+
+<!-- Voice Recording Modal -->
+<div class="modal fade" id="voiceRecordingModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <div class="voice-recording">
+                    <div class="recording-animation">
+                        <div class="pulse"></div>
+                        <i class="fas fa-microphone"></i>
+                    </div>
+                    <p>جارٍ التسجيل...</p>
+                    <div class="recording-timer">00:00</div>
+                    <div class="recording-controls">
+                        <button class="btn btn-secondary" onclick="cancelRecording()">إلغاء</button>
+                        <button class="btn btn-primary" onclick="stopRecording()">إرسال</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Emoji Picker -->
+<div class="emoji-picker" id="emojiPicker" style="display: none;">
+    <div class="emoji-grid">
+        <span class="emoji" onclick="insertEmoji('😀')">😀</span>
+        <span class="emoji" onclick="insertEmoji('😂')">😂</span>
+        <span class="emoji" onclick="insertEmoji('😍')">😍</span>
+        <span class="emoji" onclick="insertEmoji('🤔')">🤔</span>
+        <span class="emoji" onclick="insertEmoji('😎')">😎</span>
+        <span class="emoji" onclick="insertEmoji('😢')">😢</span>
+        <span class="emoji" onclick="insertEmoji('😴')">😴</span>
+        <span class="emoji" onclick="insertEmoji('😡')">😡</span>
+        <span class="emoji" onclick="insertEmoji('👍')">👍</span>
+        <span class="emoji" onclick="insertEmoji('👎')">👎</span>
+        <span class="emoji" onclick="insertEmoji('❤️')">❤️</span>
+        <span class="emoji" onclick="insertEmoji('🔥')">🔥</span>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - var(--header-height));
+    background: var(--light-color);
+    max-width: 100%;
+    margin: 0;
+}
+
+.chat-header {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    background: var(--light-color);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+    z-index: 10;
+}
+
+.chat-back-btn .btn {
+    color: var(--primary-color);
+    padding: 8px;
+}
+
+.chat-user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 8px;
+    transition: var(--transition);
+}
+
+.chat-user-info:hover {
+    background: var(--secondary-color);
+}
+
+.chat-avatar {
+    position: relative;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.chat-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.chat-avatar .default-avatar {
+    width: 100%;
+    height: 100%;
+    background: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.online-indicator {
+    position: absolute;
+    bottom: 2px;
+    left: 2px;
+    width: 12px;
+    height: 12px;
+    background: #4caf50;
+    border: 2px solid white;
+    border-radius: 50%;
+}
+
+.user-details h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--dark-color);
+}
+
+.user-status {
+    font-size: 0.8rem;
+    color: #4caf50;
+}
+
+.chat-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.chat-actions .btn {
+    color: var(--gray-color);
+    padding: 8px;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chat-actions .btn:hover {
+    background: var(--secondary-color);
+    color: var(--primary-color);
+}
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    background: linear-gradient(to bottom, var(--secondary-color), #f8f9fa);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.message {
+    display: flex;
+    gap: 10px;
+    max-width: 70%;
+    animation: fadeInUp 0.3s ease;
+}
+
+.message.sent {
+    align-self: flex-start;
+    margin-right: 30%;
+}
+
+.message.received {
+    align-self: flex-end;
+    margin-left: 30%;
+    flex-direction: row-reverse;
+}
+
+.message-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    align-self: flex-end;
+}
+
+.message-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.message-avatar .default-avatar {
+    width: 100%;
+    height: 100%;
+    background: var(--gray-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+
+.message-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.message-text {
+    background: var(--light-color);
+    padding: 12px 16px;
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+    word-wrap: break-word;
+    line-height: 1.4;
+}
+
+.message.sent .message-text {
+    background: var(--primary-color);
+    color: white;
+    border-bottom-left-radius: 6px;
+}
+
+.message.received .message-text {
+    border-bottom-right-radius: 6px;
+}
+
+.message-image {
+    max-width: 250px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+
+.message-image img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.message-time {
+    font-size: 0.7rem;
+    color: var(--gray-color);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0 5px;
+}
+
+.message.sent .message-time {
+    justify-content: flex-end;
+}
+
+.message-time .fa-check-double.delivered {
+    color: var(--gray-color);
+}
+
+.message-time .fa-check-double.read {
+    color: var(--primary-color);
+}
+
+.chat-input-container {
+    background: var(--light-color);
+    border-top: 1px solid var(--border-color);
+    padding: 15px 20px;
+    position: relative;
+}
+
+.chat-input {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--secondary-color);
+    border-radius: 25px;
+    padding: 8px;
+}
+
+.input-btn {
+    background: none;
+    border: none;
+    color: var(--gray-color);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.input-btn:hover {
+    background: var(--gray-light);
+    color: var(--primary-color);
+}
+
+.input-group {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background: var(--light-color);
+    border-radius: 20px;
+    padding: 0 15px;
+}
+
+.input-group input {
+    flex: 1;
+    border: none;
+    background: none;
+    outline: none;
+    padding: 12px 0;
+    font-size: 1rem;
+    color: var(--dark-color);
+}
+
+.input-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.send-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.send-btn:hover {
+    background: var(--primary-dark);
+    transform: scale(1.05);
+}
+
+.attachments-menu {
+    position: absolute;
+    bottom: 80px;
+    right: 30px;
+    background: var(--light-color);
+    border-radius: 12px;
+    box-shadow: var(--shadow-dark);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    z-index: 20;
+}
+
+.attachment-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: none;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+    min-width: 120px;
+    text-align: right;
+}
+
+.attachment-option:hover {
+    background: var(--secondary-color);
+}
+
+.attachment-option i {
+    color: var(--primary-color);
+    font-size: 1.1rem;
+}
+
+.voice-recording {
+    padding: 30px;
+}
+
+.recording-animation {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pulse {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    border: 2px solid var(--primary-color);
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+    opacity: 0.6;
+}
+
+.recording-animation i {
+    color: var(--primary-color);
+    font-size: 2rem;
+    z-index: 2;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.6;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.3;
+    }
+    100% {
+        transform: scale(1.4);
+        opacity: 0;
+    }
+}
+
+.recording-timer {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+}
+
+.recording-controls {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.emoji-picker {
+    position: absolute;
+    bottom: 80px;
+    left: 100px;
+    background: var(--light-color);
+    border-radius: 12px;
+    box-shadow: var(--shadow-dark);
+    padding: 15px;
+    z-index: 20;
+    max-width: 250px;
+}
+
+.emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+}
+
+.emoji {
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 6px;
+    text-align: center;
+    transition: var(--transition);
+}
+
+.emoji:hover {
+    background: var(--secondary-color);
+    transform: scale(1.2);
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .chat-header {
+        padding: 10px 15px;
+    }
+    
+    .chat-messages {
+        padding: 15px;
+    }
+    
+    .message {
+        max-width: 85%;
+    }
+    
+    .message.sent {
+        margin-right: 15%;
+    }
+    
+    .message.received {
+        margin-left: 15%;
+    }
+    
+    .chat-input-container {
+        padding: 10px 15px;
+    }
+    
+    .user-details h3 {
+        font-size: 1rem;
+    }
+    
+    .chat-actions {
+        gap: 5px;
+    }
+    
+    .chat-actions .btn {
+        width: 35px;
+        height: 35px;
+    }
+}
+
+/* Scrollbar styling */
+.chat-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+    background: var(--gray-color);
+    border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-color);
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Include chat.js -->
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+
+<script>
+// Initialize chat functionality
+document.addEventListener('DOMContentLoaded', function() {
+    initializeChat({{ user.id }}, '{{ current_user.username }}');
+    scrollToBottom();
+});
+
+function scrollToBottom() {
+    const chatMessages = document.getElementById('chatMessages');
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Handle Enter key for sending messages
+document.getElementById('messageInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
+});
+
+// Auto-resize input and show/hide send button
+document.getElementById('messageInput').addEventListener('input', function() {
+    const sendBtn = document.getElementById('sendBtn');
+    if (this.value.trim()) {
+        sendBtn.style.opacity = '1';
+        sendBtn.style.pointerEvents = 'auto';
+    } else {
+        sendBtn.style.opacity = '0.5';
+        sendBtn.style.pointerEvents = 'none';
+    }
+});
+
+// Hide menus when clicking outside
+document.addEventListener('click', function(e) {
+    const attachmentsMenu = document.getElementById('attachmentsMenu');
+    const emojiPicker = document.getElementById('emojiPicker');
+    
+    if (!e.target.closest('.chat-input-container')) {
+        attachmentsMenu.style.display = 'none';
+        emojiPicker.style.display = 'none';
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}المتابعون - {{ user.full_name }} - الكتاب الأحمر{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user-friends"></i>
+                        المتابعون - {{ user.full_name }}
+                    </h5>
+                    <a href="{{ url_for('main.user_profile', username=user.username) }}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-arrow-right"></i> العودة للملف الشخصي
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if following %}
+                        <div class="row">
+                            {% for followed_user in following %}
+                            <div class="col-md-6 mb-3">
+                                <div class="following-card d-flex align-items-center p-3 border rounded">
+                                    <div class="following-avatar me-3">
+                                        {% if followed_user.avatar and followed_user.avatar != 'default-avatar.png' %}
+                                            <img src="{{ url_for('main.uploaded_file', filename='avatars/' + followed_user.avatar) }}" 
+                                                 alt="{{ followed_user.full_name }}" class="following-img">
+                                        {% else %}
+                                            <div class="default-following-avatar">
+                                                <i class="fas fa-user"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="following-info flex-grow-1">
+                                        <h6 class="mb-1">
+                                            <a href="{{ url_for('main.user_profile', username=followed_user.username) }}" 
+                                               class="text-decoration-none">
+                                                {{ followed_user.full_name }}
+                                            </a>
+                                        </h6>
+                                        <small class="text-muted">@{{ followed_user.username }}</small>
+                                        {% if followed_user.bio %}
+                                            <p class="mb-0 text-muted small">{{ followed_user.bio[:50] }}{% if followed_user.bio|length > 50 %}...{% endif %}</p>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="following-actions">
+                                        {% if followed_user.id != current_user.id %}
+                                            {% if current_user.is_following(followed_user) %}
+                                                <button class="btn btn-outline-primary btn-sm" onclick="followUser({{ followed_user.id }}, this)">
+                                                    <i class="fas fa-user-minus"></i> إلغاء المتابعة
+                                                </button>
+                                            {% else %}
+                                                <button class="btn btn-primary btn-sm" onclick="followUser({{ followed_user.id }}, this)">
+                                                    <i class="fas fa-user-plus"></i> متابعة
+                                                </button>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="mt-4 text-center">
+                            <p class="text-muted">
+                                <i class="fas fa-user-friends"></i>
+                                إجمالي المتابعين: {{ following|length }}
+                            </p>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-user-friends text-muted" style="font-size: 4rem;"></i>
+                            <h4 class="mt-3 text-muted">لا يتابع أحداً بعد</h4>
+                            <p class="text-muted">
+                                {% if is_own_profile %}
+                                    لم تتابع أحداً بعد. ابحث عن أصدقاء لتتابعهم!
+                                {% else %}
+                                    {{ user.full_name }} لا يتابع أحداً بعد.
+                                {% endif %}
+                            </p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.following-img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid #dc143c;
+}
+
+.default-following-avatar {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(45deg, #dc143c, #ff6b6b);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.following-card {
+    transition: all 0.3s ease;
+    background: #f8f9fa;
+}
+
+.following-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+</style>
+{% endblock %}

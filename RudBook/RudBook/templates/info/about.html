@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}حول التطبيق - الكتاب الأحمر{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h3 class="card-title mb-0 text-primary">
+                        <i class="fas fa-book"></i>
+                        الكتاب الأحمر
+                    </h3>
+                    <p class="text-muted">منصة التواصل الاجتماعي العربية الرائدة</p>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <div class="about-logo">
+                            <i class="fas fa-book text-primary" style="font-size: 5rem;"></i>
+                        </div>
+                    </div>
+
+                    <div class="about-content">
+                        <h5>عن التطبيق</h5>
+                        <p>
+                            الكتاب الأحمر هو منصة تواصل اجتماعي عربية مصممة خصيصاً للمستخدمين العرب. 
+                            نوفر بيئة آمنة ومريحة للتواصل والتفاعل مع الأصدقاء والعائلة.
+                        </p>
+
+                        <h5>مميزات التطبيق</h5>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check-circle text-success me-2"></i> واجهة عربية كاملة مع دعم RTL</li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i> نظام القصص مع فلاتر الوجه المتقدمة</li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i> المحادثة الفورية والرسائل الصوتية</li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i> أنواع متعددة من المنشورات (نص، صورة، فيديو، استطلاع، موقع)</li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i> نظام البحث المتقدم</li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i> إعدادات خصوصية شاملة</li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i> تصميم متجاوب للجوال والحاسوب</li>
+                        </ul>
+
+                        <h5>معلومات تقنية</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>الإصدار:</strong> 1.0.0<br>
+                                <strong>تاريخ الإطلاق:</strong> سبتمبر 2025<br>
+                                <strong>اللغة:</strong> العربية
+                            </div>
+                            <div class="col-md-6">
+                                <strong>التقنية:</strong> Flask + Bootstrap<br>
+                                <strong>قاعدة البيانات:</strong> PostgreSQL<br>
+                                <strong>الاستضافة:</strong> Replit
+                            </div>
+                        </div>
+
+                        <h5 class="mt-4">اتصل بنا</h5>
+                        <p>
+                            نحن نقدر ملاحظاتكم واقتراحاتكم لتطوير التطبيق.
+                        </p>
+                        <div class="text-center">
+                            <a href="mailto:support@redbook.com" class="btn btn-primary me-2">
+                                <i class="fas fa-envelope"></i> البريد الإلكتروني
+                            </a>
+                            <a href="#" class="btn btn-outline-primary">
+                                <i class="fab fa-twitter"></i> تويتر
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-center text-muted">
+                    <small>&copy; 2025 الكتاب الأحمر. جميع الحقوق محفوظة.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}إعدادات الخصوصية - الكتاب الأحمر{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-shield-alt"></i>
+                        إعدادات الخصوصية
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-4">
+                            <h6 class="fw-bold">الملف الشخصي</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="profile_privacy" id="profile_public" value="public" checked>
+                                <label class="form-check-label" for="profile_public">
+                                    <i class="fas fa-globe"></i> عام - يمكن لأي شخص رؤية ملفك الشخصي
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="profile_privacy" id="profile_private" value="private">
+                                <label class="form-check-label" for="profile_private">
+                                    <i class="fas fa-lock"></i> خاص - يمكن للمتابعين فقط رؤية ملفك الشخصي
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <h6 class="fw-bold">المنشورات</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="allow_comments" checked>
+                                <label class="form-check-label" for="allow_comments">
+                                    السماح بالتعليقات على منشوراتي
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="allow_likes" checked>
+                                <label class="form-check-label" for="allow_likes">
+                                    السماح بالإعجاب بمنشوراتي
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="allow_shares" checked>
+                                <label class="form-check-label" for="allow_shares">
+                                    السماح بمشاركة منشوراتي
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <h6 class="fw-bold">الرسائل</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="message_privacy" id="messages_everyone" value="everyone" checked>
+                                <label class="form-check-label" for="messages_everyone">
+                                    يمكن لأي شخص إرسال رسائل لي
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="message_privacy" id="messages_followers" value="followers">
+                                <label class="form-check-label" for="messages_followers">
+                                    يمكن للمتابعين فقط إرسال رسائل لي
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="message_privacy" id="messages_nobody" value="nobody">
+                                <label class="form-check-label" for="messages_nobody">
+                                    لا يمكن لأحد إرسال رسائل لي
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <h6 class="fw-bold">البحث والاكتشاف</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="searchable" checked>
+                                <label class="form-check-label" for="searchable">
+                                    السماح للآخرين بالعثور عليّ في البحث
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="suggest_profile" checked>
+                                <label class="form-check-label" for="suggest_profile">
+                                    اقتراح ملفي الشخصي للآخرين
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <h6 class="fw-bold">الحظر والتبليغ</h6>
+                            <a href="#" class="btn btn-outline-danger btn-sm">
+                                <i class="fas fa-ban"></i> قائمة المحظورين
+                            </a>
+                            <a href="#" class="btn btn-outline-warning btn-sm ms-2">
+                                <i class="fas fa-flag"></i> البلاغات المرسلة
+                            </a>
+                        </div>
+
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> حفظ الإعدادات
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

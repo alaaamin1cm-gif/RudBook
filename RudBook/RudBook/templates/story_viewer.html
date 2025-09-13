@@ -1,0 +1,896 @@
+{% extends "base.html" %}
+
+{% block title %}قصة {{ story.author.full_name }} - الكتاب الأحمر{% endblock %}
+
+{% block content %}
+<div class="story-viewer">
+    <div class="story-container">
+        <!-- Story Header -->
+        <div class="story-header">
+            <div class="story-user-info">
+                <div class="story-avatar">
+                    {% if story.author.avatar and story.author.avatar != 'default-avatar.png' %}
+                        <img src="{{ url_for('main.uploaded_file', filename='avatars/' + story.author.avatar) }}" alt="صورة المؤلف">
+                    {% else %}
+                        <div class="default-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="story-user-details">
+                    <h4>{{ story.author.full_name }}</h4>
+                    <span class="story-time">{{ moment(story.created_at).fromNow() }}</span>
+                </div>
+            </div>
+            
+            <div class="story-actions">
+                <button class="story-action-btn" onclick="toggleMute()">
+                    <i class="fas fa-volume-up" id="muteIcon"></i>
+                </button>
+                <button class="story-action-btn" onclick="closeStory()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Story Progress Bar -->
+        <div class="story-progress">
+            {% for user_story in user_stories %}
+            <div class="progress-segment {% if user_story.id == story.id %}active{% elif user_story.id < story.id %}viewed{% endif %}" 
+                 data-story-id="{{ user_story.id }}">
+                <div class="progress-fill"></div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Story Content -->
+        <div class="story-content" onclick="pauseStory()">
+            {% if story.image_url %}
+                <img src="{{ url_for('main.uploaded_file', filename='stories/' + story.image_url) }}" 
+                     alt="قصة" 
+                     class="story-media {{ story.filter_name if story.filter_name else '' }}">
+            {% elif story.video_url %}
+                <video src="{{ url_for('main.uploaded_file', filename='stories/' + story.video_url) }}" 
+                       class="story-media {{ story.filter_name if story.filter_name else '' }}"
+                       autoplay
+                       muted
+                       loop
+                       id="storyVideo">
+                </video>
+            {% endif %}
+            
+            {% if story.content %}
+            <div class="story-text">
+                <p>{{ story.content }}</p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Story Navigation -->
+        <div class="story-navigation">
+            <div class="nav-area nav-prev" onclick="previousStory()"></div>
+            <div class="nav-area nav-next" onclick="nextStory()"></div>
+        </div>
+        
+        <!-- Story Footer -->
+        <div class="story-footer">
+            <div class="story-viewers">
+                <i class="fas fa-eye"></i>
+                <span>{{ story.view_count() }} مشاهدة</span>
+            </div>
+            
+            {% if story.author.id != current_user.id %}
+            <div class="story-interaction">
+                <button class="story-reply-btn" onclick="showReplyInput()">
+                    <i class="fas fa-reply"></i>
+                    رد
+                </button>
+                <button class="story-react-btn" onclick="reactToStory()">
+                    <i class="fas fa-heart"></i>
+                </button>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Reply Input -->
+        <div class="story-reply-input" id="replyInput" style="display: none;">
+            <div class="reply-container">
+                <input type="text" placeholder="رد على القصة..." id="replyText">
+                <button onclick="sendReply()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stories Sidebar -->
+    <div class="stories-sidebar">
+        <h3>قصص أخرى</h3>
+        <div class="sidebar-stories">
+            {% for user_story in user_stories %}
+            <div class="sidebar-story {{ 'active' if user_story.id == story.id else '' }}" 
+                 onclick="viewStory({{ user_story.id }})">
+                <div class="sidebar-story-thumbnail">
+                    {% if user_story.image_url %}
+                        <img src="{{ url_for('main.uploaded_file', filename='stories/' + user_story.image_url) }}" alt="قصة">
+                    {% elif user_story.video_url %}
+                        <video>
+                            <source src="{{ url_for('main.uploaded_file', filename='stories/' + user_story.video_url) }}" type="video/mp4">
+                        </video>
+                    {% endif %}
+                </div>
+                
+                <div class="sidebar-story-info">
+                    <span class="story-time">{{ moment(user_story.created_at).fromNow() }}</span>
+                    {% if user_story.content %}
+                        <p>{{ user_story.content[:30] }}{% if user_story.content|length > 30 %}...{% endif %}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Story Reactions Modal -->
+<div class="modal fade" id="reactionsModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="reactions-grid">
+                    <button class="reaction-btn" onclick="sendReaction('❤️')">❤️</button>
+                    <button class="reaction-btn" onclick="sendReaction('😍')">😍</button>
+                    <button class="reaction-btn" onclick="sendReaction('😂')">😂</button>
+                    <button class="reaction-btn" onclick="sendReaction('😢')">😢</button>
+                    <button class="reaction-btn" onclick="sendReaction('😮')">😮</button>
+                    <button class="reaction-btn" onclick="sendReaction('👏')">👏</button>
+                    <button class="reaction-btn" onclick="sendReaction('🔥')">🔥</button>
+                    <button class="reaction-btn" onclick="sendReaction('💯')">💯</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.story-viewer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    direction: rtl;
+}
+
+.story-container {
+    position: relative;
+    width: 400px;
+    height: 700px;
+    max-width: 90vw;
+    max-height: 90vh;
+    background: #000;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.story-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), transparent);
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.story-user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.story-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid white;
+    overflow: hidden;
+}
+
+.story-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.story-avatar .default-avatar {
+    width: 100%;
+    height: 100%;
+    background: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.story-user-details h4 {
+    margin: 0;
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.story-time {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.8rem;
+}
+
+.story-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.story-action-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.story-action-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.story-progress {
+    position: absolute;
+    top: 60px;
+    left: 15px;
+    right: 15px;
+    z-index: 10;
+    display: flex;
+    gap: 3px;
+}
+
+.progress-segment {
+    flex: 1;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: white;
+    width: 0%;
+    transition: width 0.1s linear;
+}
+
+.progress-segment.viewed .progress-fill {
+    width: 100%;
+}
+
+.progress-segment.active .progress-fill {
+    animation: progressFill 7s linear forwards;
+}
+
+@keyframes progressFill {
+    from { width: 0%; }
+    to { width: 100%; }
+}
+
+.story-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    cursor: pointer;
+}
+
+.story-media {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Filter effects */
+.vintage {
+    filter: sepia(0.5) contrast(1.2) brightness(0.8);
+}
+
+.sepia {
+    filter: sepia(1);
+}
+
+.blackwhite {
+    filter: grayscale(1);
+}
+
+.warm {
+    filter: hue-rotate(15deg) saturate(1.2) brightness(1.1);
+}
+
+.cool {
+    filter: hue-rotate(-15deg) saturate(1.1) brightness(0.9);
+}
+
+.story-text {
+    position: absolute;
+    bottom: 100px;
+    left: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    padding: 15px;
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+}
+
+.story-text p {
+    margin: 0;
+    text-align: center;
+    font-size: 1.1rem;
+    line-height: 1.4;
+}
+
+.story-navigation {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+}
+
+.nav-area {
+    flex: 1;
+    cursor: pointer;
+}
+
+.nav-prev {
+    background: linear-gradient(to right, rgba(0, 0, 0, 0.1), transparent);
+}
+
+.nav-next {
+    background: linear-gradient(to left, rgba(0, 0, 0, 0.1), transparent);
+}
+
+.story-footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.story-viewers {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: white;
+    font-size: 0.9rem;
+}
+
+.story-interaction {
+    display: flex;
+    gap: 10px;
+}
+
+.story-reply-btn,
+.story-react-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.9rem;
+}
+
+.story-reply-btn:hover,
+.story-react-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.story-reply-input {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 15px;
+    z-index: 15;
+}
+
+.reply-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 25px;
+    padding: 5px;
+}
+
+.reply-container input {
+    flex: 1;
+    background: none;
+    border: none;
+    color: white;
+    padding: 10px 15px;
+    outline: none;
+    font-size: 1rem;
+}
+
+.reply-container input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.reply-container button {
+    background: var(--primary-color);
+    border: none;
+    color: white;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stories-sidebar {
+    position: absolute;
+    left: -320px;
+    top: 0;
+    width: 300px;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    padding: 20px;
+    transition: var(--transition);
+    overflow-y: auto;
+}
+
+.stories-sidebar.visible {
+    left: 0;
+}
+
+.stories-sidebar h3 {
+    color: white;
+    margin-bottom: 20px;
+    font-size: 1.2rem;
+}
+
+.sidebar-stories {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.sidebar-story {
+    display: flex;
+    gap: 12px;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.sidebar-story:hover,
+.sidebar-story.active {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-story-thumbnail {
+    width: 50px;
+    height: 70px;
+    border-radius: 6px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.sidebar-story-thumbnail img,
+.sidebar-story-thumbnail video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.sidebar-story-info {
+    flex: 1;
+    color: white;
+}
+
+.sidebar-story-info .story-time {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.sidebar-story-info p {
+    margin: 5px 0 0;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.3;
+}
+
+.reactions-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    padding: 10px;
+}
+
+.reaction-btn {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.reaction-btn:hover {
+    background: var(--secondary-color);
+    transform: scale(1.2);
+}
+
+/* Animations */
+.story-viewer {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Paused state */
+.story-container.paused .progress-segment.active .progress-fill {
+    animation-play-state: paused;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .story-container {
+        width: 100vw;
+        height: 100vh;
+        border-radius: 0;
+    }
+    
+    .stories-sidebar {
+        width: 280px;
+        left: -280px;
+    }
+    
+    .story-header {
+        padding: 12px;
+    }
+    
+    .story-progress {
+        top: 55px;
+        left: 12px;
+        right: 12px;
+    }
+    
+    .story-footer {
+        padding: 12px;
+    }
+}
+
+/* Scrollbar styling for sidebar */
+.stories-sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.stories-sidebar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.stories-sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+}
+
+.stories-sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentStoryIndex = 0;
+let userStories = {{ user_stories | tojson }};
+let isPaused = false;
+let isMuted = false;
+let autoAdvanceTimer;
+
+// Initialize story viewer
+document.addEventListener('DOMContentLoaded', function() {
+    startStoryProgress();
+    setupKeyboardNavigation();
+    
+    // Auto-advance to next story
+    autoAdvanceTimer = setTimeout(() => {
+        nextStory();
+    }, 7000);
+});
+
+function startStoryProgress() {
+    const activeSegment = document.querySelector('.progress-segment.active .progress-fill');
+    if (activeSegment) {
+        activeSegment.style.animationDuration = '7s';
+    }
+}
+
+function pauseStory() {
+    const container = document.querySelector('.story-container');
+    const video = document.getElementById('storyVideo');
+    
+    if (isPaused) {
+        container.classList.remove('paused');
+        if (video) video.play();
+        isPaused = false;
+        
+        // Resume auto-advance timer
+        autoAdvanceTimer = setTimeout(() => {
+            nextStory();
+        }, 7000);
+    } else {
+        container.classList.add('paused');
+        if (video) video.pause();
+        isPaused = true;
+        
+        // Clear auto-advance timer
+        clearTimeout(autoAdvanceTimer);
+    }
+}
+
+function nextStory() {
+    clearTimeout(autoAdvanceTimer);
+    
+    const currentStoryId = {{ story.id }};
+    const currentIndex = userStories.findIndex(s => s.id === currentStoryId);
+    
+    if (currentIndex < userStories.length - 1) {
+        const nextStory = userStories[currentIndex + 1];
+        window.location.href = `/story/${nextStory.id}`;
+    } else {
+        closeStory();
+    }
+}
+
+function previousStory() {
+    clearTimeout(autoAdvanceTimer);
+    
+    const currentStoryId = {{ story.id }};
+    const currentIndex = userStories.findIndex(s => s.id === currentStoryId);
+    
+    if (currentIndex > 0) {
+        const prevStory = userStories[currentIndex - 1];
+        window.location.href = `/story/${prevStory.id}`;
+    }
+}
+
+function closeStory() {
+    window.history.back();
+}
+
+function toggleMute() {
+    const video = document.getElementById('storyVideo');
+    const muteIcon = document.getElementById('muteIcon');
+    
+    if (video) {
+        if (isMuted) {
+            video.muted = false;
+            muteIcon.classList.remove('fa-volume-mute');
+            muteIcon.classList.add('fa-volume-up');
+            isMuted = false;
+        } else {
+            video.muted = true;
+            muteIcon.classList.remove('fa-volume-up');
+            muteIcon.classList.add('fa-volume-mute');
+            isMuted = true;
+        }
+    }
+}
+
+function viewStory(storyId) {
+    window.location.href = `/story/${storyId}`;
+}
+
+function showReplyInput() {
+    const replyInput = document.getElementById('replyInput');
+    replyInput.style.display = 'block';
+    replyInput.querySelector('input').focus();
+}
+
+function sendReply() {
+    const replyText = document.getElementById('replyText').value.trim();
+    if (replyText) {
+        // Send reply to story author
+        fetch('/api/story/reply', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                story_id: {{ story.id }},
+                message: replyText
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                document.getElementById('replyInput').style.display = 'none';
+                document.getElementById('replyText').value = '';
+                showToast('تم إرسال الرد بنجاح', 'success');
+            }
+        })
+        .catch(error => {
+            console.error('Error sending reply:', error);
+            showToast('حدث خطأ أثناء إرسال الرد', 'error');
+        });
+    }
+}
+
+function reactToStory() {
+    const modal = new bootstrap.Modal(document.getElementById('reactionsModal'));
+    modal.show();
+}
+
+function sendReaction(emoji) {
+    fetch('/api/story/react', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            story_id: {{ story.id }},
+            reaction: emoji
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            bootstrap.Modal.getInstance(document.getElementById('reactionsModal')).hide();
+            showToast('تم إرسال التفاعل بنجاح', 'success');
+        }
+    })
+    .catch(error => {
+        console.error('Error sending reaction:', error);
+        showToast('حدث خطأ أثناء إرسال التفاعل', 'error');
+    });
+}
+
+function setupKeyboardNavigation() {
+    document.addEventListener('keydown', function(e) {
+        switch(e.key) {
+            case 'ArrowLeft':
+                nextStory();
+                break;
+            case 'ArrowRight':
+                previousStory();
+                break;
+            case ' ':
+                e.preventDefault();
+                pauseStory();
+                break;
+            case 'Escape':
+                closeStory();
+                break;
+            case 'm':
+            case 'M':
+                toggleMute();
+                break;
+        }
+    });
+}
+
+// Touch navigation for mobile
+let touchStartX = 0;
+let touchEndX = 0;
+
+document.addEventListener('touchstart', function(e) {
+    touchStartX = e.changedTouches[0].screenX;
+});
+
+document.addEventListener('touchend', function(e) {
+    touchEndX = e.changedTouches[0].screenX;
+    handleSwipe();
+});
+
+function handleSwipe() {
+    const swipeThreshold = 50;
+    const diff = touchStartX - touchEndX;
+    
+    if (Math.abs(diff) > swipeThreshold) {
+        if (diff > 0) {
+            // Swipe left - next story
+            nextStory();
+        } else {
+            // Swipe right - previous story
+            previousStory();
+        }
+    }
+}
+
+// Add moment.js time formatting
+function moment(date) {
+    return {
+        fromNow: function() {
+            const now = new Date();
+            const postDate = new Date(date);
+            const diffTime = Math.abs(now - postDate);
+            const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffHours < 1) return 'منذ دقائق';
+            if (diffHours < 24) return `منذ ${diffHours} ساعة`;
+            if (diffDays === 1) return 'منذ يوم واحد';
+            return `منذ ${diffDays} أيام`;
+        }
+    };
+}
+
+// Utility function for showing toasts
+function showToast(message, type = 'info') {
+    // Create a simple toast notification
+    const toast = document.createElement('div');
+    toast.className = `toast-notification toast-${type}`;
+    toast.textContent = message;
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? '#4caf50' : type === 'error' ? '#f44336' : '#2196f3'};
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        z-index: 10000;
+        animation: slideInRight 0.3s ease;
+    `;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
+</script>
+{% endblock %}

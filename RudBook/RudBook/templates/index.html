@@ -1,0 +1,432 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="main-content">
+    <!-- Left Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-title">القائمة الرئيسية</div>
+        <ul class="sidebar-menu">
+            <li><a href="{{ url_for('main.index') }}" class="active"><i class="fas fa-home"></i> الرئيسية</a></li>
+            <li><a href="{{ url_for('main.user_profile', username=current_user.username) }}"><i class="fas fa-user"></i>
+                    الملف الشخصي</a></li>
+            <li><a href="{{ url_for('main.messages') }}"><i class="fas fa-envelope"></i> الرسائل</a></li>
+            <li><a href="#" onclick="showCreateStory()"><i class="fas fa-plus-circle"></i> إضافة قصة</a></li>
+            <li><a href="#" onclick="showCreatePost()"><i class="fas fa-edit"></i> منشور جديد</a></li>
+            <li><a href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a></li>
+        </ul>
+    </div>
+
+    <!-- Feed -->
+    <div class="feed">
+        <!-- Stories Section -->
+        {% if stories %}
+        <div class="stories">
+            <div class="add-story" onclick="showCreateStory()">
+                <i class="fas fa-plus"></i>
+                <span>إضافة قصة</span>
+            </div>
+
+            {% for story in stories %}
+            <div class="story" onclick="viewStory({{ story.id }})">
+                {% if story.image_url %}
+                <img src="{{ url_for('main.uploaded_file', filename='stories/' + story.image_url) }}" alt="قصة"
+                    class="story-bg">
+                {% elif story.video_url %}
+                <video src="{{ url_for('main.uploaded_file', filename='stories/' + story.video_url) }}"
+                    class="story-bg"></video>
+                {% endif %}
+
+                <div class="story-avatar">
+                    {% if story.author.avatar and story.author.avatar != 'default-avatar.png' %}
+                    <img src="{{ url_for('main.uploaded_file', filename='avatars/' + story.author.avatar) }}"
+                        alt="صورة المؤلف">
+                    {% else %}
+                    <div class="default-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="story-username">{{ story.author.full_name }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Create Post -->
+        <div class="create-post">
+            <div class="create-post-header">
+                <div class="user-avatar">
+                    {% if current_user.avatar and current_user.avatar != 'default-avatar.png' %}
+                    <img src="{{ url_for('main.uploaded_file', filename='avatars/' + current_user.avatar) }}"
+                        alt="الصورة الشخصية">
+                    {% else %}
+                    <div class="default-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="create-post-input">
+                    <textarea placeholder="ما الذي تفكر فيه، {{ current_user.full_name }}؟"
+                        onclick="showCreatePost()"></textarea>
+                </div>
+            </div>
+
+            <div class="create-post-actions">
+                <div class="post-action" onclick="showCreatePost('image')">
+                    <i class="fas fa-image"></i>
+                    صورة
+                </div>
+                <div class="post-action" onclick="showCreatePost('video')">
+                    <i class="fas fa-video"></i>
+                    فيديو
+                </div>
+                <div class="post-action" onclick="showCreatePost('poll')">
+                    <i class="fas fa-poll"></i>
+                    استطلاع
+                </div>
+                <div class="post-action" onclick="showCreatePost('location')">
+                    <i class="fas fa-map-marker-alt"></i>
+                    موقع
+                </div>
+            </div>
+        </div>
+
+        <!-- Posts -->
+        {% for post in posts %}
+        <div class="post">
+            {% if post.post_type == 'share' and post.original_post %}
+            <div class="shared-post-header">
+                <i class="fas fa-share"></i>
+                <span>{{ post.author.full_name }} قام بمشاركة منشور</span>
+            </div>
+            {% endif %}
+
+            <div class="post-header">
+                <div class="post-user"
+                    onclick="location.href='{{ url_for('main.user_profile', username=post.author.username) }}'">
+                    <div class="post-user-avatar">
+                        {% if post.author.avatar and post.author.avatar != 'default-avatar.png' %}
+                        <img src="{{ url_for('main.uploaded_file', filename='avatars/' + post.author.avatar) }}"
+                            alt="صورة المؤلف">
+                        {% else %}
+                        <div class="default-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="post-user-info">
+                        <h3>{{ post.author.full_name }}</h3>
+                        <span>{{ post.created_at|moment }}</span>
+                        {% if post.location_name %}
+                        <div class="post-location">
+                            <i class="fas fa-map-marker-alt"></i>
+                            {{ post.location_name }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="post-menu">
+                    <button class="btn btn-link" data-bs-toggle="dropdown">
+                        <i class="fas fa-ellipsis-h"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                        {% if post.user_id == current_user.id %}
+                        <li><a class="dropdown-item" href="#" onclick="deletePost({{ post.id }})">حذف المنشور</a></li>
+                        {% else %}
+                        <li><a class="dropdown-item" href="#" onclick="reportPost({{ post.id }})">الإبلاغ عن المنشور</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="post-content">
+                {% if post.content %}
+                <p>{{ post.content }}</p>
+                {% endif %}
+
+                {% if post.image_url %}
+                <div class="post-image">
+                    <img src="{{ url_for('main.uploaded_file', filename='posts/' + post.image_url) }}"
+                        alt="صورة المنشور">
+                </div>
+                {% endif %}
+
+                {% if post.video_url %}
+                <div class="post-video">
+                    <video controls>
+                        <source src="{{ url_for('main.uploaded_file', filename='posts/' + post.video_url) }}"
+                            type="video/mp4">
+                    </video>
+                </div>
+                {% endif %}
+
+                {% if post.post_type == 'poll' %}
+                <div class="poll-container">
+                    {% for option in post.poll_options %}
+                    <div class="poll-option" onclick="voteOnPoll({{ option.id }})">
+                        <span class="poll-text">{{ option.text }}</span>
+                        <span class="poll-votes">{{ option.vote_count }} صوت</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="post-stats">
+                <span class="like-count">{{ post.like_count() }} إعجاب</span>
+                <span class="comment-count">{{ post.comment_count() }} تعليق</span>
+            </div>
+
+            <div class="post-actions">
+                <button class="action-btn {% if post.is_liked_by(current_user) %}liked{% endif %}"
+                    onclick="toggleLike({{ post.id }}, this)">
+                    <i class="fas fa-heart"></i>
+                    إعجاب
+                </button>
+
+                <button class="action-btn" onclick="toggleComments({{ post.id }})">
+                    <i class="fas fa-comment"></i>
+                    تعليق
+                </button>
+
+                <button class="action-btn">
+                    <i class="fas fa-share"></i>
+                    مشاركة
+                </button>
+            </div>
+
+            <div class="comments-section" id="comments-{{ post.id }}" style="display: none;">
+                <div class="add-comment">
+                    <div class="user-avatar">
+                        {% if current_user.avatar and current_user.avatar != 'default-avatar.png' %}
+                        <img src="{{ url_for('main.uploaded_file', filename='avatars/' + current_user.avatar) }}"
+                            alt="الصورة الشخصية">
+                        {% else %}
+                        <div class="default-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <form class="comment-form" onsubmit="addComment(event, {{ post.id }})">
+                        <input type="text" name="content" placeholder="اكتب تعليقاً..." required>
+                        <button type="submit"><i class="fas fa-paper-plane"></i></button>
+                    </form>
+                </div>
+
+                <div class="comments-list">
+                    {% for comment in post.comments.order_by(Comment.created_at.desc()).limit(5) %}
+                    <div class="comment">
+                        <div class="comment-avatar">
+                            {% if comment.author.avatar and comment.author.avatar != 'default-avatar.png' %}
+                            <img src="{{ url_for('main.uploaded_file', filename='avatars/' + comment.author.avatar) }}"
+                                alt="صورة المعلق">
+                            {% else %}
+                            <div class="default-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="comment-content">
+                            <div class="comment-header">
+                                <strong>{{ comment.author.full_name }}</strong>
+                                <span class="comment-time">{{ moment(comment.created_at).fromNow() }}</span>
+                            </div>
+                            <p>{{ comment.content }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Right Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-title">
+            اقتراحات الأصدقاء
+            <button class="btn btn-sm btn-link float-end" onclick="dismissSuggestions()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="friend-suggestions">
+            {% for user in suggested_users %}
+            <div class="suggestion-item">
+                <div class="suggestion-avatar">
+                    {% if user.avatar and user.avatar != 'default-avatar.png' %}
+                    <img src="{{ url_for('main.uploaded_file', filename='avatars/' + user.avatar) }}"
+                        alt="صورة المستخدم">
+                    {% else %}
+                    <div class="default-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="suggestion-info">
+                    <h6>{{ user.full_name }}</h6>
+                    <small>@{{ user.username }}</small>
+                </div>
+
+                <div class="suggestion-actions">
+                    <button class="btn btn-primary btn-sm" onclick="followUser({{ user.id }})">
+                        متابعة
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Create Post Modal -->
+<div class="modal fade" id="createPostModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">إنشاء منشور جديد</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form action="{{ url_for('main.create_post') }}" method="POST" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="create-post-user">
+                        <div class="user-avatar">
+                            {% if current_user.avatar and current_user.avatar != 'default-avatar.png' %}
+                            <img src="{{ url_for('main.uploaded_file', filename='avatars/' + current_user.avatar) }}"
+                                alt="الصورة الشخصية">
+                            {% else %}
+                            <div class="default-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <strong>{{ current_user.full_name }}</strong>
+                    </div>
+
+                    <textarea name="content" class="form-control mt-3" rows="4"
+                        placeholder="ما الذي تفكر فيه؟"></textarea>
+
+                    <input type="hidden" name="post_type" id="postType" value="text">
+
+                    <div id="imageUpload" class="mt-3" style="display: none;">
+                        <label for="postImage" class="form-label">اختر صورة</label>
+                        <input type="file" class="form-control" name="image" id="postImage" accept="image/*">
+                    </div>
+
+                    <div id="videoUpload" class="mt-3" style="display: none;">
+                        <label for="postVideo" class="form-label">اختر فيديو</label>
+                        <input type="file" class="form-control" name="video" id="postVideo" accept="video/*">
+                    </div>
+
+                    <div id="pollOptions" class="mt-3" style="display: none;">
+                        <label class="form-label">خيارات الاستطلاع</label>
+                        <div id="pollInputs">
+                            <input type="text" class="form-control mb-2" name="poll_options[]"
+                                placeholder="الخيار الأول">
+                            <input type="text" class="form-control mb-2" name="poll_options[]"
+                                placeholder="الخيار الثاني">
+                        </div>
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="addPollOption()">
+                            <i class="fas fa-plus"></i> إضافة خيار
+                        </button>
+                    </div>
+
+                    <div id="locationInput" class="mt-3" style="display: none;">
+                        <label for="locationName" class="form-label">الموقع</label>
+                        <input type="text" class="form-control" name="location_name" id="locationName"
+                            placeholder="أين أنت؟">
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <div class="post-type-selector">
+                        <button type="button" class="btn btn-outline-secondary" onclick="setPostType('text')">
+                            <i class="fas fa-font"></i> نص
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="setPostType('image')">
+                            <i class="fas fa-image"></i> صورة
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="setPostType('video')">
+                            <i class="fas fa-video"></i> فيديو
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="setPostType('poll')">
+                            <i class="fas fa-poll"></i> استطلاع
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="setPostType('location')">
+                            <i class="fas fa-map-marker-alt"></i> موقع
+                        </button>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">نشر</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Create Story Modal -->
+<div class="modal fade" id="createStoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">إضافة قصة جديدة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form action="{{ url_for('main.create_story') }}" method="POST" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="storyMedia" class="form-label">اختر صورة أو فيديو</label>
+                        <input type="file" class="form-control" name="story_media" id="storyMedia"
+                            accept="image/*,video/*" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="storyContent" class="form-label">نص القصة (اختياري)</label>
+                        <textarea name="content" class="form-control" id="storyContent" rows="3"
+                            placeholder="اكتب شيئاً عن قصتك..."></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="storyFilter" class="form-label">الفلتر</label>
+                        <select name="filter_name" class="form-select" id="storyFilter">
+                            <option value="">بدون فلتر</option>
+                            <option value="vintage">عتيق</option>
+                            <option value="sepia">سيبيا</option>
+                            <option value="blackwhite">أبيض وأسود</option>
+                            <option value="warm">دافئ</option>
+                            <option value="cool">بارد</option>
+                        </select>
+                    </div>
+
+                    <div class="story-preview" id="storyPreview" style="display: none;">
+                        <img id="previewImage" style="max-width: 100%; height: auto; border-radius: 8px;">
+                        <video id="previewVideo" style="max-width: 100%; height: auto; border-radius: 8px;"
+                            controls></video>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">إضافة القصة</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Additional JavaScript for index page -->
+<script src="{{ url_for('static', filename='js/camera.js') }}"></script>
+<script src="{{ url_for('static', filename='js/filters.js') }}"></script>
+{% endblock %}

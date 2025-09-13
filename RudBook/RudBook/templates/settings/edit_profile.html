@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}تعديل الملف الشخصي - الكتاب الأحمر{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user-edit"></i>
+                        تعديل الملف الشخصي
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        <div class="row">
+                            <div class="col-md-4 text-center">
+                                <div class="mb-3">
+                                    <label class="form-label">الصورة الشخصية</label>
+                                    <div class="avatar-upload">
+                                        {% if user.avatar and user.avatar != 'default-avatar.png' %}
+                                            <img src="{{ url_for('main.uploaded_file', filename='avatars/' + user.avatar) }}" 
+                                                 alt="الصورة الشخصية" class="current-avatar">
+                                        {% else %}
+                                            <div class="default-avatar-large">
+                                                <i class="fas fa-user"></i>
+                                            </div>
+                                        {% endif %}
+                                        <input type="file" name="avatar" id="avatar" accept="image/*" class="form-control mt-2">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="full_name" class="form-label">الاسم الكامل</label>
+                                    <input type="text" class="form-control" id="full_name" name="full_name" 
+                                           value="{{ user.full_name }}" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">اسم المستخدم</label>
+                                    <input type="text" class="form-control" id="username" name="username" 
+                                           value="{{ user.username }}" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">البريد الإلكتروني</label>
+                                    <input type="email" class="form-control" id="email" name="email" 
+                                           value="{{ user.email }}" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="bio" class="form-label">نبذة شخصية</label>
+                                    <textarea class="form-control" id="bio" name="bio" rows="3" 
+                                              placeholder="اكتب نبذة مختصرة عنك...">{{ user.bio or '' }}</textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="location" class="form-label">الموقع</label>
+                                    <input type="text" class="form-control" id="location" name="location" 
+                                           value="{{ user.location or '' }}" placeholder="المدينة، البلد">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="website" class="form-label">الموقع الإلكتروني</label>
+                                    <input type="url" class="form-control" id="website" name="website" 
+                                           value="{{ user.website or '' }}" placeholder="https://example.com">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="birth_date" class="form-label">تاريخ الميلاد</label>
+                                    <input type="date" class="form-control" id="birth_date" name="birth_date" 
+                                           value="{{ user.birth_date.strftime('%Y-%m-%d') if user.birth_date else '' }}">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-end">
+                            <a href="{{ url_for('main.user_profile', username=user.username) }}" class="btn btn-secondary me-2">
+                                <i class="fas fa-times"></i> إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> حفظ التغييرات
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.avatar-upload .current-avatar {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid #dc143c;
+}
+
+.default-avatar-large {
+    width: 120px;
+    height: 120px;
+    background: linear-gradient(45deg, #dc143c, #ff6b6b);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    margin: 0 auto;
+}
+</style>
+{% endblock %}
